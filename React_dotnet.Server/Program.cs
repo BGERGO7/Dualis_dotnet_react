@@ -1,4 +1,6 @@
 
+using Microsoft.EntityFrameworkCore;
+using React_dotnet.database;
 using React_dotnet.Server.Middlewares;
 
 namespace React_dotnet.Server
@@ -19,7 +21,16 @@ namespace React_dotnet.Server
 
             builder.Services.AddCors();
 
+            builder.Services.AddDbContext<CoreDbContext>(options => 
+                options.UseSqlite(builder.Configuration.GetConnectionString(nameof(CoreDbContext)))
+                
+            );
+
             var app = builder.Build();
+
+            using var scope = app.Services.CreateScope();
+            using var coredbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
+            coredbContext.Database.Migrate();
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
