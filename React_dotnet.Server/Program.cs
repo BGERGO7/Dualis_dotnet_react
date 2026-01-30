@@ -1,4 +1,6 @@
 
+using React_dotnet.Server.Middlewares;
+
 namespace React_dotnet.Server
 {
     public class Program
@@ -8,11 +10,14 @@ namespace React_dotnet.Server
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
+            builder.Services.AddAuthenticationServices(builder.Configuration);
+            
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddCors();
 
             var app = builder.Build();
 
@@ -26,8 +31,18 @@ namespace React_dotnet.Server
                 app.UseSwaggerUI();
             }
 
+            app.UseCors(builder => builder
+               .AllowCredentials()
+               .WithOrigins("http://localhost:3000")
+               .AllowAnyMethod()
+               .AllowAnyHeader()
+            );
+
             app.UseHttpsRedirection();
 
+            app.UseMiddleware<AuthorizationHeaderSetterMiddleware>();
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
 

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import './App.css';
+import { axiosInstance } from './axios';
+
 
 interface Forecast {
     date: string;
@@ -47,11 +49,10 @@ function App() {
     );
 
     async function populateWeatherData() {
-        const response = await fetch('weatherforecast');
-        if (response.ok) {
-            const data = await response.json();
-            setForecasts(data);
-        }
+        axiosInstance
+        .get<Forecast[]>('weatherforecast')
+        .then((resp) => resp.data)
+        .then((data) => setForecasts(data));
     }
 }
 
