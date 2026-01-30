@@ -4,14 +4,9 @@ using System.Reflection;
 
 namespace React_dotnet.database
 {
-    public class CoreDbContext : DbContext
+    public class CoreDbContext(DbContextOptions<CoreDbContext> options) : DbContext(options)
     {
         public DbSet<User> Users { get; set; }
-
-        public CoreDbContext(DbContextOptions<CoreDbContext> options) : base(options)
-        {
-            
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
