@@ -3,5 +3,6 @@
     <Build />
     <Deploy />
   </Project>
+  <Project Path="React_dotnet.database/React_dotnet.database.csproj" Id="5b9cfff7-17b4-4644-9b7c-060629dee5a6" />
   <Project Path="React_dotnet.Server/React_dotnet.Server.csproj" />
 </Solution>

@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using React_dotnet.database;
 using React_dotnet.Server.Middlewares;

@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using React_dotnet.database;
 using React_dotnet.Server.Dtos.Auth;
 using React_dotnet.Server.Dtos.Options;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 
@@ -15,18 +17,21 @@ namespace React_dotnet.Server.Controllers
     public class AuthController : ControllerBase    
     {
         private readonly IOptions<JwtOptions> options;
+        private readonly CoreDbContext coreDbContext;
 
-        public AuthController(IOptions<JwtOptions> options)
+        public AuthController(IOptions<JwtOptions> options, CoreDbContext coreDbContext)
         {
             this.options = options;
+            this.coreDbContext = coreDbContext;
         }
 
         [HttpPost("Login")]
         [AllowAnonymous]
         public ActionResult Login(LoginRequest request)
         {
-            // Fake adatbazis
-            if(request.Email != "admin" || request.Password != "password")
+            var user = coreDbContext.Users.SingleOrDefault(u => u.Email == request.Email && u.Password == request.Password);
+            
+            if (user == null)
             {
                 return Unauthorized();
             }

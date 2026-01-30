@@ -3,8 +3,8 @@ import { useState } from "react";
 import { axiosInstance } from "../../axios";
 
 export function LoginForm() {
-  const [email, setEmail] = useState<string>("admin");
-  const [password, setPassword] = useState<string>("password");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
 
   // explanation: useMutation is used for operations that change data on the server, such as login
   const { mutateAsync: loginAsync } = useMutation({
