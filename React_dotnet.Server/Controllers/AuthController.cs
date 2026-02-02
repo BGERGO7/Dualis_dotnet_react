@@ -1,8 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using React_dotnet.database;
+using React_dotnet.database.Models;
+using React_dotnet.Server.Dtos;
 using React_dotnet.Server.Dtos.Auth;
 using React_dotnet.Server.Dtos.Options;
 using System.IdentityModel.Tokens.Jwt;
@@ -25,18 +29,56 @@ namespace React_dotnet.Server.Controllers
             this.coreDbContext = coreDbContext;
         }
 
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public ActionResult Register(UserDto userDto) // Kézi mappelés
+        {
+            var hasher = new PasswordHasher<object>();
+            var passwordHash = hasher.HashPassword(null!, userDto.Password);
+
+            // Kézi mappelés (mapper pl: Automapper)
+            var user = new User
+            {
+                Id = 0,
+                FirstName = userDto.FirstName,
+                LastName = userDto.LastName,
+                Email = userDto.Email,
+                PasswordHash = passwordHash
+
+            };
+
+            coreDbContext.Users.Add(user);
+            coreDbContext.SaveChanges();
+
+            return NoContent();
+
+        }
+
         [HttpPost("Login")]
         [AllowAnonymous]
         public ActionResult Login(LoginRequest request)
         {
-            var user = coreDbContext.Users.SingleOrDefault(u => u.Email == request.Email && u.PasswordHash == request.Password);
+            var user = coreDbContext
+                .Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .SingleOrDefault(u => u.Email == request.Email);
             
             if (user == null)
             {
                 return Unauthorized();
             }
 
-            var accessToken = GenerateJwtToken(request.Email);
+            var hasher = new PasswordHasher<object>();
+
+            var result = hasher.VerifyHashedPassword(null!, user.PasswordHash, request.Password);
+
+            if(result == PasswordVerificationResult.Failed)
+            {
+                return Unauthorized();
+            }
+
+            var accessToken = GenerateJwtToken(user);
 
             var cookieOptions = new CookieOptions
             {
@@ -76,16 +118,19 @@ namespace React_dotnet.Server.Controllers
 
 
 
-        private string GenerateJwtToken(string email)
+        private string GenerateJwtToken(User user)
         {
            var jwt = options.Value;
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
-               new Claim(ClaimTypes.Name, email), // Ez kerül majd a HttpContecxt.User.Isdentity.Name - be
-               new Claim(ClaimTypes.Email, email),
-               new Claim(ClaimTypes.Role, "User")
+               new Claim(ClaimTypes.Name, user.Email), // Ez kerül majd a HttpContecxt.User.Isdentity.Name - be
+               new Claim(ClaimTypes.Email, user.Email),
+               new Claim("firstName", user.FirstName),
+               new Claim("lastName", user.LastName),
             };
+
+            claims.AddRange(user.UserRoles.Select(ur => new Claim(ClaimTypes.Role, ur.Role.Name)));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key));
             

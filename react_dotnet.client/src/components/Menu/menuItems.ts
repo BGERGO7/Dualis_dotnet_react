@@ -9,4 +9,15 @@ export const menuItems: MenuItem[] = [
     label: "Weather Forecast",
     url: "/weather-forecast",
   },
+  {
+    label: "Product",
+    url: "/products",
+  },
+];
+
+export const adminMenuItems: MenuItem[] = [
+  {
+    label: "Product Admin",
+    url: "/product-admin",
+  },
 ];
