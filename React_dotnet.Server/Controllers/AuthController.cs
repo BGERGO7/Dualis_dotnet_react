@@ -29,7 +29,7 @@ namespace React_dotnet.Server.Controllers
         [AllowAnonymous]
         public ActionResult Login(LoginRequest request)
         {
-            var user = coreDbContext.Users.SingleOrDefault(u => u.Email == request.Email && u.Password == request.Password);
+            var user = coreDbContext.Users.SingleOrDefault(u => u.Email == request.Email && u.PasswordHash == request.Password);
             
             if (user == null)
             {
