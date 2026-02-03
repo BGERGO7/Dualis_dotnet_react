@@ -1,3 +1,9 @@
+## Github fő repo
+
+<pre>
+https://github.com/gh057k33p3r/Eszi.Demo
+</pre>
+
 ## Entity Framework install
 
 <pre>

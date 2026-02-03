@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using MapsterMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using React_dotnet.database;
 using React_dotnet.database.Models;
 using React_dotnet.Server.Dtos;
-using System.Linq;
 
 namespace React_dotnet.Server.Controllers
 {
@@ -13,21 +13,14 @@ namespace React_dotnet.Server.Controllers
     public class ProductController : ControllerBase
     {
         private readonly CoreDbContext coreDbContext;
+        private readonly IMapper mapper;
 
-        public ProductController(CoreDbContext coreDbContext)
+        public ProductController(CoreDbContext coreDbContext, IMapper mapper)
         {
             this.coreDbContext = coreDbContext;
+            this.mapper = mapper;
         }
 
-        // Mapping function
-
-        Func<Product, ProductDto> mapProductToDto = p => new ProductDto
-        {
-            Id = p.Id,
-            Name = p.Name,
-            Description = p.Description,
-            Price = p.Price,
-        };
 
 
         // GET /product
@@ -38,7 +31,7 @@ namespace React_dotnet.Server.Controllers
             var products = await coreDbContext.Products
                 .ToListAsync();
 
-            var mapped = products.Select(mapProductToDto);
+            var mapped = mapper.Map<List<ProductDto>>(products);
 
             return Ok(mapped);
         }
@@ -55,26 +48,18 @@ namespace React_dotnet.Server.Controllers
                 return NotFound();
             }
 
-            var mapped = mapProductToDto(product);
+            var mapped = mapper.Map<ProductDto>(product);
 
             return Ok(mapped);
         }
 
-        // Mapping function
-        Func<ProductDto, Product> mapProductDtotoProduct = p => new Product
-        {
-            Id = p.Id,
-            Name = p.Name,
-            Description = p.Description,
-            Price = p.Price,
-        };
 
         // POST /product
         [HttpPost] 
         [Authorize(Roles = BuiltInRoles.Admin)] //csak adminnak
         public async Task<ActionResult<Product>> Post(ProductDto product)
         {
-            var mapped = mapProductDtotoProduct(product);
+            var mapped = mapper.Map<Product>(product);
 
             await coreDbContext.Products.AddAsync(mapped);
             await coreDbContext.SaveChangesAsync();
@@ -114,9 +99,18 @@ namespace React_dotnet.Server.Controllers
                 return NotFound();
             }
 
+            var mapped = mapper.Map<Product>(product);
+
+            coreDbContext
+                .Entry(existingProduct)
+                .CurrentValues
+                .SetValues(mapped);
+
+            /*
             existingProduct.Name = product.Name;
             existingProduct.Description = product.Description;
             existingProduct.Price = product.Price;
+            */
 
             await coreDbContext.SaveChangesAsync();
 
